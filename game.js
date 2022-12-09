@@ -37,7 +37,69 @@ function dump(board, size, offset, moves) {
     console.log('');
 }
 
-function encode(fen, size, X, offset) {
+function flipX(pos, size) {
+    const x = pos % size;
+    pos -= x;
+    return pos + (size - x - 1);
+}
+
+function flipY(pos, size) {
+    const y = (pos / size) | 0;
+    pos -= y * size;
+    return (size - y - 1) * size + pos;
+}
+
+function toRight(pos, size) {
+    const x = pos % size;
+    const y = (pos / size) | 0;
+    return x * size + (size - y - 1);
+}
+
+function toLeft(pos, size) {
+    const x = pos % size;
+    const y = (pos / size) | 0;
+    return (size - x - 1) * size + y;
+}
+
+function transform(pos, n, size) {    
+    switch (n) {
+        case 1:
+            pos = flipX(pos, size);
+            break;
+        case 2:
+            pos = flipY(pos, size);
+            break;
+        case 3:
+            pos = flipX(pos, size);
+            pos = flipY(pos, size);
+            break;
+        case 4:
+            pos = toRight(pos, size);
+            break;
+        case 5:
+            pos = toLeft(pos, size);
+            break;
+        case 6:
+            pos = toRight(pos, size);
+            pos = flipX(pos, size);
+            break;
+        case 7:
+            pos = toLeft(pos, size);
+            pos = flipX(pos, size);
+            break;
+        case 8:
+            pos = flipX(pos, size);
+            pos = toLeft(pos, size);
+            break;
+        case 9:
+            pos = flipX(pos, size);
+            pos = toRight(pos, size);
+            break;
+    }
+    return pos;
+}
+
+function encode(fen, size, X, offset, ix) {
     let pos = 0; const o = size * size;
     for (let i = 0; i < fen.length; i++) {
         const c = fen[i];
@@ -50,12 +112,12 @@ function encode(fen, size, X, offset) {
                     p = -p;
                 }
                 if (ml.PLANE_COUNT == 1) {
-                    X[pos + offset] = p;
+                    X[transform(pos, ix, size) + offset] = p;
                 } else {
                     if (p > 0) {
-                        X[pos + offset] = 1;
+                        X[transform(pos, ix, size) + offset] = 1;
                     } else {
-                        X[pos + o + offset] = 1;
+                        X[transform(pos, ix, size) + o + offset] = 1;
                     }
                 }
                 pos++;
@@ -82,12 +144,17 @@ async function proceed(model, fen, pos, logger) {
         Z = new Float32Array(BATCH);
         C = 0;
     }
-    encode(fen, ml.SIZE, X, xo);
-    Y[yo + pos] = 1;
-//  dump(X, ml.SIZE, xo, Y);
-    xo += ml.SIZE * ml.SIZE * ml.PLANE_COUNT;
-    yo += ml.SIZE * ml.SIZE;
-    C++;
+    for (let ix = 0; ix < 8; ix++) {
+        encode(fen, ml.SIZE, X, xo);
+        Y[yo + transform(pos, ix, size)] = 1;
+        if (ix == 0) {
+//          dump(X, ml.SIZE, xo, Y);
+        }
+        xo += ml.SIZE * ml.SIZE * ml.PLANE_COUNT;
+        yo += ml.SIZE * ml.SIZE;
+        C++;
+        if (C >= BATCH) break;
+    }
 }
 
 module.exports.proceed = proceed;

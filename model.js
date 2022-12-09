@@ -7,7 +7,7 @@ const SIZE          = 19;
 const PLANE_COUNT   = 1;
 
 const BATCH_SIZE    = 1024;
-const EPOCH_COUNT   = 100;
+const EPOCH_COUNT   = 50;
 const VALID_SPLIT   = 0.1;
 const LEARNING_RATE = 0.001;
 const DROPOUT_RATE  = 0.002;
