@@ -146,7 +146,7 @@ async function proceed(model, fen, pos, logger) {
     }
     for (let ix = 0; ix < 8; ix++) {
         encode(fen, ml.SIZE, X, xo);
-        Y[yo + transform(pos, ix, size)] = 1;
+        Y[yo + transform(pos, ix, ml.SIZE)] = 1;
         if (ix == 0) {
 //          dump(X, ml.SIZE, xo, Y);
         }
